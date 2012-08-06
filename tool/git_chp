@@ -13,15 +13,16 @@ my $dry_run;
 GetOptions (
     "from=s"   => \$from,
     "to=s"     => \$to,
+    "branch=s" => \$branch,
     "dry_run"  => \$dry_run,
 ) or pod2usage;
-pod2usage if (!$from);
+pod2usage if (!$from || !$branch);
 
 my @commits = map {
     my $commit = $_;
     $commit =~ s/\n//;
     $commit;
-} `git log --first-parent --no-merges --pretty=%H`;
+} `git log --first-parent --no-merges --pretty=%H $branch`;
 @commits = slice_commits(
     commits => \@commits,
     from    => $from,
@@ -68,13 +69,14 @@ git_chp - git cherry-pick tool
 git_chp [options] 
 
  Options:
+   --branch   git branch name
    --from     git from (older) commit 
    --to       git to   (younger) commit (optional)
    --dry_run  only print git cherry-pick commands (optional)
 
 =head1 DESCRIPTION
 
-this script helps you to merge some current rep's git commits (without merge commits and induced commits having parents)to git current branch.
+this script helps you to merge some git branche's commits (without merge commits and induced commits having parents)to git current branch.
 you can give from commit ,to commit options you want to merge.
 
 =cut
