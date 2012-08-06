@@ -13,22 +13,19 @@ my $dry_run;
 GetOptions (
     "from=s"   => \$from,
     "to=s"     => \$to,
-    "branch=s" => \$branch,
     "dry_run"  => \$dry_run,
 ) or pod2usage;
-pod2usage if (!$branch || !$from || !$to);
+pod2usage if (!$from);
 
 my @commits = map {
     my $commit = $_;
-    $commit =~ s/^commit //;
     $commit =~ s/\n//;
     $commit;
-} grep {$_ =~ /^commit /} `git log $branch`;
-
+} `git log --first-parent --no-merges --pretty=%H`;
 @commits = slice_commits(
     commits => \@commits,
     from    => $from,
-    to      => $to,    
+    to      => $to,
 );
 error('no commits matched') unless(@commits);
 @commits = reverse @commits;
@@ -46,7 +43,7 @@ sub slice_commits {
     my @sliced_commits;
     my $mached = 0;
     for my $commit (@{$args{commits}}) {
-        next unless ($commit eq $args{to} || $mached);
+        next if ( ( defined $args{to} && $commit ne $args{to} ) && !$mached );
         $mached = 1;
         push @sliced_commits, $commit;
         last if ($commit eq $args{from});
@@ -71,14 +68,13 @@ git_chp - git cherry-pick tool
 git_chp [options] 
 
  Options:
-   --branch   git branch name
    --from     git from (older) commit 
-   --to       git to   (younger) commit
-   --dry_run  only print git cherry-pick commands
+   --to       git to   (younger) commit (optional)
+   --dry_run  only print git cherry-pick commands (optional)
 
 =head1 DESCRIPTION
 
-this script helps you to merge some git branche's commits to git current branch.
-you can give branch, from commit , to commit options you want to merge. 
+this script helps you to merge some current rep's git commits (without merge commits and induced commits having parents)to git current branch.
+you can give from commit ,to commit options you want to merge.
 
 =cut
