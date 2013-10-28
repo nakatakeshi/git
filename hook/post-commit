@@ -1,0 +1,16 @@
+#!/bin/ruby
+
+# commit
+commit = `git rev-parse HEAD`
+# branch
+branch = `git branch --contain #{commit}`.chomp.sub('* ', '')
+# remote
+cmd = sprintf('git branch -a |grep -v "\->" |grep "/%s$" |grep remotes |sed "s/  remotes\///" |head -1 |sed "s/\/%s//" 2> /dev/null', branch.gsub('/', '\/'), branch.gsub('/', '\/'))
+remote =  `#{cmd}`.chomp
+# repo
+repo = `git config remote.#{remote}.url 2> /dev/null`.chomp
+if repo =~ /\.git$/
+    repo.chomp.sub('\.git$', '')
+end
+puts sprintf('%s/commit/%s', repo, commit)
+
